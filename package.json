@@ -1,0 +1,11 @@
+{
+  "name": "elder-guardian-agent",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev:dashboard": "pnpm --filter web-dashboard dev",
+    "dev:hmi": "pnpm --filter elder-hmi dev",
+    "build": "pnpm -r build"
+  }
+}
+

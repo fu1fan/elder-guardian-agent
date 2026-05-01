@@ -1,0 +1,15 @@
+[Unit]
+Description=Elder Guardian Chromium Kiosk HMI
+After=graphical.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/chromium --kiosk --disable-infobars --noerrdialogs http://127.0.0.1:5174
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical.target
+

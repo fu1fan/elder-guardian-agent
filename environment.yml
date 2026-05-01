@@ -1,0 +1,13 @@
+name: elder-guardian-agent
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - -e ./packages/guardian-shared
+      - -e ./apps/guardian-core
+      - -e ./apps/vision-service
+      - -e ./apps/voice-hmi-service
+      - -e ./apps/wechat-adapter
+

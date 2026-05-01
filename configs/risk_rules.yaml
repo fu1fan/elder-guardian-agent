@@ -1,0 +1,18 @@
+vital:
+  spo2_p0_below: 88
+  spo2_p1_below: 92
+  heart_rate_p1_low: 45
+  heart_rate_p1_high: 130
+  heart_rate_p2_low: 55
+  heart_rate_p2_high: 110
+environment:
+  co2_p3_above: 1500
+  temperature_high_above: 30
+  temperature_low_below: 16
+  gas_p0_above: 100
+  smoke_p0_above: 80
+vision:
+  suspected_fall_p1_confidence: 0.65
+  long_static_p2_confidence: 0.50
+  night_abnormal_activity_p1_confidence: 0.60
+

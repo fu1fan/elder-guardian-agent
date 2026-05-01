@@ -1,0 +1,15 @@
+elder_topics:
+  sensor_vital: elder/{elder_id}/sensor/vital
+  sensor_env: elder/{elder_id}/sensor/env
+  vision_event: elder/{elder_id}/vision/event
+  hmi_prompt: elder/{elder_id}/hmi/prompt
+  hmi_response: elder/{elder_id}/hmi/response
+  hmi_status: elder/{elder_id}/hmi/status
+  alert_event: elder/{elder_id}/alert/event
+  agent_decision: elder/{elder_id}/agent/decision
+  system_status: elder/{elder_id}/system/status
+home_topics:
+  device_set: home/{room}/{device}/set
+  device_state: home/{room}/{device}/state
+  device_ack: home/{room}/{device}/ack
+

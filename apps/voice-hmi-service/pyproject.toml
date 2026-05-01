@@ -1,0 +1,14 @@
+[project]
+name = "voice-hmi-service"
+version = "0.1.0"
+description = "Mock ASR/TTS HMI service for the elder guardian MVP."
+requires-python = ">=3.11"
+dependencies = [
+  "paho-mqtt>=2.0",
+  "guardian-shared"
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+

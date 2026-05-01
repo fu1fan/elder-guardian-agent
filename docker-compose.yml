@@ -1,0 +1,50 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: elder-guardian-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./deploy/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./data/logs:/mosquitto/log
+
+  guardian-core:
+    build:
+      context: .
+      dockerfile: apps/guardian-core/Dockerfile
+    container_name: elder-guardian-core
+    depends_on:
+      - mosquitto
+    env_file:
+      - .env.example
+    environment:
+      MQTT_HOST: mosquitto
+      DATABASE_URL: sqlite:////app/data/guardian.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./configs:/app/configs:ro
+
+  web-dashboard:
+    image: node:24-alpine
+    container_name: elder-guardian-dashboard
+    profiles: ["frontend"]
+    working_dir: /app
+    command: sh -c "corepack enable && pnpm install && pnpm --filter web-dashboard dev --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+
+  elder-hmi:
+    image: node:24-alpine
+    container_name: elder-guardian-hmi
+    profiles: ["frontend"]
+    working_dir: /app
+    command: sh -c "corepack enable && pnpm install && pnpm --filter elder-hmi dev --host 0.0.0.0"
+    ports:
+      - "5174:5174"
+    volumes:
+      - .:/app
+

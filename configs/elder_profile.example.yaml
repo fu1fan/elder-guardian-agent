@@ -1,0 +1,18 @@
+elder_id: elder_001
+name: 张阿姨
+age: 78
+home_city: 深圳
+rooms:
+  - living_room
+  - bedroom
+  - kitchen
+baseline:
+  heart_rate_range: [58, 95]
+  spo2_normal_above: 94
+contacts:
+  - name: 女儿
+    relation: daughter
+    mock_wechat_id: family_001
+notes:
+  - 夜间起身频繁时优先本地询问，不要直接打扰家属。
+

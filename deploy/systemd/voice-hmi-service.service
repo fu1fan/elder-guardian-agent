@@ -1,0 +1,17 @@
+[Unit]
+Description=Elder Guardian Mock Voice HMI Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/elder-guardian-agent
+Environment=ELDER_ID=elder_001
+Environment=MQTT_HOST=127.0.0.1
+ExecStart=/opt/miniconda3/envs/elder-guardian-agent/bin/python apps/voice-hmi-service/app/main.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

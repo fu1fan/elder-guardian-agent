@@ -1,0 +1,34 @@
+devices:
+  living_room/window:
+    allowed_actions: ["open", "close"]
+  living_room/air_conditioner:
+    allowed_actions: ["turn_on", "turn_off", "set_temperature"]
+  living_room/fan:
+    allowed_actions: ["turn_on", "turn_off"]
+  bedroom/light:
+    allowed_actions: ["turn_on", "turn_off"]
+  kitchen/gas_valve:
+    allowed_actions: ["open", "close"]
+  local/local_alarm:
+    allowed_actions: ["alarm_on", "alarm_off"]
+
+event_constraints:
+  gas_leak:
+    allowed_devices:
+      - living_room/window
+      - kitchen/gas_valve
+      - local/local_alarm
+    denied_devices:
+      - living_room/air_conditioner
+      - living_room/fan
+    required_actions:
+      - room: living_room
+        device: window
+        action: open
+      - room: kitchen
+        device: gas_valve
+        action: close
+      - room: local
+        device: local_alarm
+        action: alarm_on
+
