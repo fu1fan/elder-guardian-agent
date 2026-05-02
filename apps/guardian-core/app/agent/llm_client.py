@@ -64,13 +64,13 @@ class LLMClient:
                 {"role": "user", "content": build_user_prompt(context)},
             ],
             "temperature": 0.2,
+            "max_tokens": settings.llm_max_tokens,
             "response_format": {"type": "json_object"},
         }
-        async with httpx.AsyncClient(timeout=20) as client:
+        async with httpx.AsyncClient(timeout=settings.llm_timeout_sec) as client:
             response = await client.post(url, headers=headers, json=payload)
             response.raise_for_status()
             data = response.json()
         content = data["choices"][0]["message"]["content"]
         logger.info("LLM response received")
         return {"raw": content}
-

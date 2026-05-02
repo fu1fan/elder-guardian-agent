@@ -60,6 +60,8 @@ class Settings:
     llm_api_key: str
     llm_model: str
     llm_mock: bool
+    llm_timeout_sec: int
+    llm_max_tokens: int
     hmi_response_timeout_sec: int
     dashboard_ws_path: str
     wechat_mock: bool
@@ -83,6 +85,8 @@ def get_settings() -> Settings:
         llm_api_key=os.getenv("LLM_API_KEY", "change-me"),
         llm_model=os.getenv("LLM_MODEL", "qwen2.5:7b"),
         llm_mock=_env_bool("LLM_MOCK", True),
+        llm_timeout_sec=_env_int("LLM_TIMEOUT_SEC", 120),
+        llm_max_tokens=_env_int("LLM_MAX_TOKENS", 512),
         hmi_response_timeout_sec=_env_int("HMI_RESPONSE_TIMEOUT_SEC", 30),
         dashboard_ws_path=os.getenv("DASHBOARD_WS_PATH", "/ws/dashboard"),
         wechat_mock=_env_bool("WECHAT_MOCK", True),
@@ -93,4 +97,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-
