@@ -1,0 +1,99 @@
+name: Docker Images
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build and push ARM64 images
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: guardian-core
+            dockerfile: apps/guardian-core/Dockerfile
+            context: .
+            build_args: ""
+          - image: web-dashboard
+            dockerfile: deploy/docker/frontend.Dockerfile
+            context: .
+            build_args: |
+              APP_DIR=apps/web-dashboard
+          - image: elder-hmi
+            dockerfile: deploy/docker/frontend.Dockerfile
+            context: .
+            build_args: |
+              APP_DIR=apps/elder-hmi
+          - image: wechat-adapter
+            dockerfile: deploy/docker/python-app.Dockerfile
+            context: .
+            build_args: |
+              APP_DIR=apps/wechat-adapter
+          - image: vision-service
+            dockerfile: deploy/docker/python-app.Dockerfile
+            context: .
+            build_args: |
+              APP_DIR=apps/vision-service
+          - image: voice-hmi-service
+            dockerfile: deploy/docker/python-app.Dockerfile
+            context: .
+            build_args: |
+              APP_DIR=apps/voice-hmi-service
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image prefix
+        run: |
+          repo_lower="$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "IMAGE_PREFIX=ghcr.io/${repo_lower}" >> "$GITHUB_ENV"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_PREFIX }}/${{ matrix.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/arm64
+          push: true
+          build-args: ${{ matrix.build_args }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,scope=${{ matrix.image }},mode=max
+

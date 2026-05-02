@@ -30,7 +30,7 @@ def publish_reply(client: mqtt.Client, elder_id: str, prompt: dict[str, Any], re
     print(f"[MOCK ASR] reply published: {model_to_json(response)}")
 
 
-def subscribe(elder_id: str, host: str, port: int) -> None:
+def subscribe(elder_id: str, host: str, port: int, listen_only: bool = False) -> None:
     client = mqtt.Client(client_id=f"voice-hmi-{elder_id}")
 
     def on_connect(client: mqtt.Client, userdata: object, flags: dict, rc: int, properties: object = None) -> None:
@@ -47,6 +47,17 @@ def subscribe(elder_id: str, host: str, port: int) -> None:
     client.on_message = on_message
     client.connect(host, port, keepalive=60)
     client.loop_start()
+    if listen_only:
+        print("listen-only mode enabled; replies should be sent from elder-hmi or /api/hmi/response.")
+        try:
+            while True:
+                import time
+
+                time.sleep(3600)
+        finally:
+            client.loop_stop()
+            client.disconnect()
+        return
     try:
         while True:
             text = input("> ").strip()
@@ -66,10 +77,10 @@ def main() -> None:
     parser.add_argument("--elder-id", default=os.getenv("ELDER_ID", "elder_001"))
     parser.add_argument("--host", default=os.getenv("MQTT_HOST", "localhost"))
     parser.add_argument("--port", type=int, default=int(os.getenv("MQTT_PORT", "1883")))
+    parser.add_argument("--listen-only", action="store_true", help="Subscribe and print prompts without reading stdin.")
     args = parser.parse_args()
-    subscribe(args.elder_id, args.host, args.port)
+    subscribe(args.elder_id, args.host, args.port, listen_only=args.listen_only)
 
 
 if __name__ == "__main__":
     main()
-

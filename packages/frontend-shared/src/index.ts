@@ -22,9 +22,17 @@ declare global {
   interface ImportMeta {
     readonly env: Record<string, string | undefined>;
   }
+  interface Window {
+    __ELDER_GUARDIAN_CONFIG__?: {
+      GUARDIAN_API_BASE?: string;
+    };
+  }
 }
 
-export const API_BASE = import.meta.env.VITE_GUARDIAN_API_BASE ?? "http://localhost:8000";
+export const API_BASE =
+  window.__ELDER_GUARDIAN_CONFIG__?.GUARDIAN_API_BASE ??
+  import.meta.env.VITE_GUARDIAN_API_BASE ??
+  "http://localhost:8000";
 
 export function wsUrl(): string {
   const url = new URL(API_BASE);

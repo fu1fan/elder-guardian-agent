@@ -1,0 +1,83 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./deploy/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./data/mosquitto:/mosquitto/data
+      - ./data/logs:/mosquitto/log
+
+  guardian-core:
+    image: ${IMAGE_PREFIX}/guardian-core:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+      DATABASE_URL: sqlite:////app/data/guardian.db
+      LLM_MOCK: ${LLM_MOCK:-true}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./configs:/app/configs:ro
+
+  web-dashboard:
+    image: ${IMAGE_PREFIX}/web-dashboard:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - guardian-core
+    environment:
+      GUARDIAN_API_BASE: ${PUBLIC_GUARDIAN_API_BASE:-http://192.168.10.64:8000}
+    ports:
+      - "5173:80"
+
+  elder-hmi:
+    image: ${IMAGE_PREFIX}/elder-hmi:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - guardian-core
+    environment:
+      GUARDIAN_API_BASE: ${PUBLIC_GUARDIAN_API_BASE:-http://192.168.10.64:8000}
+    ports:
+      - "5174:80"
+
+  wechat-adapter:
+    image: ${IMAGE_PREFIX}/wechat-adapter:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      GUARDIAN_CORE_URL: http://guardian-core:8000
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8102"]
+    ports:
+      - "8102:8102"
+
+  vision-service:
+    image: ${IMAGE_PREFIX}/vision-service:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+      ELDER_ID: ${ELDER_ID:-elder_001}
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8101"]
+    ports:
+      - "8101:8101"
+
+  voice-hmi-service:
+    image: ${IMAGE_PREFIX}/voice-hmi-service:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+      ELDER_ID: ${ELDER_ID:-elder_001}
+    command: ["python", "-m", "app.main", "--listen-only"]
+
