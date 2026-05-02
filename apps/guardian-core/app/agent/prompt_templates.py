@@ -9,14 +9,43 @@ SYSTEM_PROMPT = """你是居家老人健康守护与环境协同 Agent。
 
 
 def build_user_prompt(context: dict) -> str:
-    context_json = json.dumps(context, ensure_ascii=False, separators=(",", ":"), default=str)
+    rule = context.get("rule_result", {})
+    risk_level = str(rule.get("risk_level", "P4"))
+    risk_score = float(rule.get("risk_score", 0.0) or 0.0)
+    event_type = str(rule.get("event_type", "normal"))
+    summary = str(rule.get("summary", "未发现异常。"))
+    template = {
+        "risk_level": risk_level,
+        "risk_score": risk_score,
+        "event_type": event_type,
+        "reasoning_summary": summary,
+        "recommended_actions": _default_actions(risk_level),
+        "need_elder_confirmation": risk_level in {"P1", "P2"},
+        "need_family_notification": risk_level in {"P0", "P1"},
+        "alert_priority": risk_level,
+        "device_actions": [],
+    }
+    event_context = {
+        "rule_result": rule,
+        "source_payload": context.get("source_payload", {}),
+        "recent_vital": context.get("recent_vital"),
+        "recent_environment": context.get("recent_environment"),
+        "recent_vision": context.get("recent_vision", []),
+    }
     return (
-        "请基于以下紧凑上下文输出一个 AgentDecision JSON 对象：\n"
-        f"{context_json}\n"
-        "必须只输出 JSON，不要 Markdown。严格使用这些字段和类型："
-        '{"risk_level":"P0|P1|P2|P3|P4","risk_score":0.0,"event_type":"string",'
-        '"reasoning_summary":"string","recommended_actions":["string"],'
-        '"need_elder_confirmation":false,"need_family_notification":false,'
-        '"alert_priority":"P0|P1|P2|P3|P4","device_actions":[]}'
-        "。alert_priority 必须是 P0/P1/P2/P3/P4，不要写高/中/低。device_actions 只能是建议，不要生成 MQTT 指令。"
+        "你只输出一行合法 JSON，不输出 Markdown，不换行，不解释。"
+        f"事件上下文:{json.dumps(event_context, ensure_ascii=False, separators=(',', ':'), default=str)}。"
+        "输出必须使用这个 schema 和已给默认值，可微调 reasoning_summary，但不要改变 risk_level 或 alert_priority："
+        f"{json.dumps(template, ensure_ascii=False, separators=(',', ':'), default=str)}"
     )
+
+
+def _default_actions(risk_level: str) -> list[str]:
+    actions: dict[str, list[str]] = {
+        "P0": ["立即告警", "通知家属", "执行安全联动", "记录事件"],
+        "P1": ["本地询问老人", "同步通知家属", "持续观察"],
+        "P2": ["本地询问老人", "超时升级通知家属"],
+        "P3": ["自动调节环境", "记录事件"],
+        "P4": ["记录正常状态"],
+    }
+    return actions.get(risk_level, actions["P4"])
